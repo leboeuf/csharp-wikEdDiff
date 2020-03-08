@@ -42,13 +42,8 @@ namespace WikEdDiff
 
         public WikEdDiffText(string text, WikEdDiff parent)
         {
-            Text = text;
+            Text = text.Replace("\r", string.Empty);
             Parent = parent;
-        }
-
-        public void Initialize()
-        {
-            Text = Text.Replace("\r", string.Empty);
 
             WordParse(WikEdDiffConfiguration.RegularExpressions.CountWords);
             WordParse(WikEdDiffConfiguration.RegularExpressions.CountChunks);
@@ -64,15 +59,15 @@ namespace WikEdDiff
             var matchLength = regExpMatch.Count;
             for (var i = 0; i < matchLength; i++)
             {
-                var word = regExpMatch[i];
-                //if (Object.prototype.hasOwnProperty.call(Words, word) == false) // TODO: convert Object.Prototype.hasOwnProperty
-                //{
-                //    Words[word.Value] = 1;
-                //}
-                //else
-                //{
-                //    Words[word.Value]++;
-                //}
+                var word = regExpMatch[i].Value;
+                if (!Words.ContainsKey(word))
+                {
+                    Words[word] = 1;
+                }
+                else
+                {
+                    Words[word]++;
+                }
             }
         }
 

@@ -184,15 +184,7 @@ namespace WikEdDiff
                 SlideGaps(_newText, _oldText);
                 SlideGaps(_oldText, _newText);
             }
-
-            // Free memory
-            // TODO: line 1102
-            //this.symbols = undefined;
-            //this.bordersDown = undefined;
-            //this.bordersUp = undefined;
-            //this.newText.words = undefined;
-            //this.oldText.words = undefined;
-
+            
             // Enumerate token lists
             _newText.EnumerateTokens();
             _oldText.EnumerateTokens();
@@ -206,13 +198,7 @@ namespace WikEdDiff
 
             // Assemble blocks into fragment table
             GetDiffFragments();
-
-            // Free memory
-            // TODO: line 1129
-            //this.blocks = undefined;
-            //this.groups = undefined;
-            //this.sections = undefined;
-
+            
             // Clipping
             if (Configuration.FullDiff)
             {
@@ -220,7 +206,7 @@ namespace WikEdDiff
             }
 
             // Create html formatted diff code from diff fragments
-            //GetDiffHtml(); // TODO
+            GetDiffHtml();
 
             // No change
             if (string.IsNullOrEmpty(Html))
@@ -1374,7 +1360,7 @@ namespace WikEdDiff
             }
 
             // Sort blocks by new text token number
-            Blocks = Blocks.OrderBy(b => b.NewNumber).ToList(); // TODO: validate sort order (line 2241)
+            Blocks = Blocks.OrderBy(b => b.NewNumber).ToList();
 
             // Number blocks in new text order
             var blocksLength = Blocks.Count;
@@ -1648,8 +1634,8 @@ namespace WikEdDiff
         private void PositionDelBlocks()
         {
             // Sort shallow copy of blocks by oldNumber
-            var blocksOld = Blocks; // TODO: copy list instead of modifying original
-            blocksOld.OrderBy(b => b.OldNumber).ToList(); // TODO: validate sort order (line 2715)
+            var blocksOld = new List<Block>(Blocks);
+            blocksOld = blocksOld.OrderBy(b => b.OldNumber).ToList();
 
             // Cycle through blocks in old text order
             var blocksOldLength = blocksOld.Count;
@@ -1841,7 +1827,7 @@ namespace WikEdDiff
                         BlockStart = block,
                         BlockEnd = block,
                         Unique = Blocks[block].Unique,
-                        MaxWords = Blocks[block].Words.Value,
+                        MaxWords = Blocks[block].Words,
                         Words = Blocks[block].Words,
                         Chars = Blocks[block].Chars,
                         Fixed = Blocks[block].Fixed,
@@ -1875,7 +1861,7 @@ namespace WikEdDiff
             var color = 1;
 
             // Make shallow copy of blocks
-            var blocksOld = Blocks.ToList(); // TODO: make copy instead of modifying the original list
+            var blocksOld = new List<Block>(Blocks);
 
             // Enumerate copy
             var blocksOldLength = blocksOld.Count;
@@ -1885,10 +1871,10 @@ namespace WikEdDiff
             }
 
             // Sort copy by oldNumber
-            blocksOld.OrderBy(b => b.NewNumber).ThenBy(b => b.OldNumber); // TODO: Validate sort (line 3015)
+            blocksOld = blocksOld.OrderBy(b => b.NewNumber).ThenBy(b => b.OldNumber).ToList();
 
             // Create lookup table: original to sorted
-            var lookupSorted = new List<int>();
+            var lookupSorted = new int[blocksOldLength];
             for (var i = 0; i < blocksOldLength; i++)
             {
                 lookupSorted[blocksOld[i].Number] = i;
@@ -2014,7 +2000,7 @@ namespace WikEdDiff
         private void SortBlocks()
         {
             // Sort by newNumber, then by old number
-            Blocks.OrderBy(b => b.NewNumber).ThenBy(b => b.OldNumber); // TODO: Validate sort (line 2887)
+            Blocks = Blocks.OrderBy(b => b.NewNumber).ThenBy(b => b.OldNumber).ToList();
 
             // Cycle through blocks and update groups with new block numbers
             int? group = null;
@@ -2120,8 +2106,8 @@ namespace WikEdDiff
         private void GetDiffFragments()
         {
             // Make shallow copy of groups and sort by blockStart
-            var groupsSort = Groups; // TODO: make copy instead of modifying original list
-            groupsSort.OrderBy(g => g.BlockStart); // TODO: Validate order (Line 3160)
+            var groupsSort = new List<Model.Group>(Groups);
+            groupsSort = groupsSort.OrderBy(g => g.BlockStart).ToList();
 
             // Cycle through groups
             var groupsSortLength = groupsSort.Count;
@@ -2706,6 +2692,11 @@ namespace WikEdDiff
 				    fragmentsLength++;
 			    }
             }
+        }
+
+        private void GetDiffHtml()
+        {
+            throw new NotImplementedException();//TODO
         }
     }
 
