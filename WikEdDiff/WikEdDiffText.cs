@@ -83,14 +83,14 @@ namespace WikEdDiff
         /// <param name="token">Index of token to be split, otherwise uses full text.</param>
         public void SplitText(string level, int? token = null)
         {
-            int? prev = 0;
-            int? next = 0;
+            int? prev = null;
+            int? next = null;
             var current = Tokens.Count;
             var first = current;
             var text = "";
 
             // Split full text or specified token
-            if (token != null)
+            if (token == null)
             {
                 text = Text;
             }
@@ -112,11 +112,14 @@ namespace WikEdDiff
                 var regExpMatch = regExpMatches[i];
                 if (regExpMatch.Index > lastIndex)
                 {
-                    split.Add(Text.Substring(lastIndex, regExpMatch.Index));
+                    split.Add(text.Substring(lastIndex, regExpMatch.Index - lastIndex));
                 }
-
                 split.Add(regExpMatch.Value);
-                //lastIndex = regExp.lastIndex; // TODO: Line 4444
+                lastIndex += regExpMatch.Value.Length + (regExpMatch.Index > lastIndex ? regExpMatch.Index - lastIndex : 0);
+            }
+            if (lastIndex < text.Length)
+            {
+                split.Add(text.Substring(lastIndex));
             }
 
             // Cycle through new tokens

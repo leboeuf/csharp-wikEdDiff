@@ -96,52 +96,8 @@ namespace WikEdDiff
 
         public MessagesConfig MessagesConfig { get; set; } = new MessagesConfig();
 
-        public static class RegularExpressions
+        public static class RegularExpressionStrings
         {
-            public static Dictionary<string, Regex> Split = new Dictionary<string, Regex>
-            {
-                // Split into paragraphs, after double newlines
-                { "paragraph", new Regex(@"(\\r\\n|\\n|\\r){2,}|[" + NewParagraph + "]") },
-
-                // Split into lines
-                { "line", new Regex(@"\\r\\n|\\n|\\r|[" + NewLinesAll + "]") },
-
-                // Split into sentences /[^ ].*?[.!?:;]+(?= |$)/
-                { "sentence", new Regex("[^" +
-                    Blanks +
-                    "].*?[.!?:;" +
-                    FullStops +
-                    ExclamationMarks +
-                    QuestionMarks +
-                    "]+(?=[" +
-                    Blanks +
-                    "]|$)") },
-
-                // Split into inline chunks
-                { "chunk", new Regex(
-                    @"\\[\\[[^\\[\\]\\n]+\\]\\]|" +       // [[wiki link]]
-                    @"\\{\\{[^\\{\\}\\n]+\\}\\}|" +       // {{template}}
-                    @"\\[[^\\[\\]\\n]+\\]|" +             // [ext. link]
-                    @"<\\/?[^<>\\[\\]\\{\\}\\n]+>|" +     // <html>
-                    @"\\[\\[[^\\[\\]\\|\\n]+\\]\\]\\||" + // [[wiki link|
-                    @"\\{\\{[^\\{\\}\\|\\n]+\\||" +       // {{template|
-                    @"\\b((https?:|)\\/\\/)[^\\x00-\\x20\\s""\\[\\]\\x7f]+" // link
-                )},
-
-                // Split into words, multi-char markup, and chars
-			    // Letters speed-up: \\w+
-                { "word", new Regex(
-                    @"(\\w+|[_" +
-                    Letters +
-                    "])+(['’][_" +
-                    Letters +
-                    @"]*)*|\\[\\[|\\]\\]|\\{\\{|\\}\\}|&\\w+;|'''|''|==+|\\{\\||\\|\\}|\\|-|." // TODO: these backslashes are probably wrong
-                )},
-
-                // Split into chars
-                { "character", new Regex(".") }
-            };
-
             /// <summary>
             /// UniCode letter support for regexps.
             /// From http://xregexp.com/addons/unicode/unicode-base.js v1.0.0.
@@ -182,30 +138,115 @@ namespace WikEdDiff
                     "FD50-FD8FFD92-FDC7FDF0-FDFBFE70-FE74FE76-FEFCFF21-FF3AFF41-FF5AFF66-FFBEFFC2-FFC7FFCA-" +
                     "FFCFFFD2-FFD7FFDA-FFDC",
                     @"(\w{4})",
-                    @"\\u$1");
+                    @"\u$1");
+
+            /// <summary>
+            /// New line characters without \n and \r.
+            /// </summary>
+            public static Regex NewLines { get; set; } = new Regex(@"\u0085\u2028");
+
+            /// <summary>
+            /// New line characters with \n and \r.
+            /// </summary>
+            public static Regex NewLinesAll { get; set; } = new Regex(@"\n\r\u0085\u2028");
+
+            /// <summary>
+            /// Breaking white space characters without \n, \r, and \f.
+            /// </summary>
+            public static Regex Blanks { get; set; } = new Regex(@" \t\x0b\u2000-\u200b\u202f\u205f\u3000");
+
+            /// <summary>
+            /// Full stops without '.'.
+            /// </summary>
+            public static Regex FullStops { get; set; } = new Regex(@"\u0589\u06D4\u0701\u0702\u0964\u0DF4\u1362\u166E\u1803\u1809" +
+                @"\u2CF9\u2CFE\u2E3C\u3002\uA4FF\uA60E\uA6F3\uFE52\uFF0E\uFF61");
+
+            /// <summary>
+            /// New paragraph characters without \n and \r.
+            /// </summary>
+            public static string NewParagraph = @"\f\u2029";
+
+            /// <summary>
+            /// Exclamation marks without '!'.
+            /// </summary>
+            public static Regex ExclamationMarks { get; set; } = new Regex(@"\u01C3\u01C3\u01C3\u055C\u055C\u07F9\u1944\u1944" +
+                @"\u203C\u203C\u2048\u2048\uFE15\uFE57\uFF01");
+
+            /// <summary>
+            /// Question marks without '?'.
+            /// </summary>
+            public static Regex QuestionMarks { get; set; } = new Regex(@"\u037E\u055E\u061F\u1367\u1945\u2047\u2049" +
+                @"\u2CFA\u2CFB\u2E2E\uA60F\uA6F7\uFE56\uFF1F");
+        }
+
+        public static class RegularExpressions
+        {
+            public static Dictionary<string, Regex> Split = new Dictionary<string, Regex>
+            {
+                // Split into paragraphs, after double newlines
+                { "paragraph", new Regex(@"(\r\n|\n|\r){2,}|[" + RegularExpressionStrings.NewParagraph + "]") },
+
+                // Split into lines
+                { "line", new Regex(@"\r\n|\n|\r|[" + RegularExpressionStrings.NewLinesAll + "]") },
+
+                // Split into sentences /[^ ].*?[.!?:;]+(?= |$)/
+                { "sentence", new Regex("[^" +
+                    RegularExpressionStrings.Blanks +
+                    "].*?[.!?:;" +
+                    RegularExpressionStrings.FullStops +
+                    RegularExpressionStrings.ExclamationMarks +
+                    RegularExpressionStrings.QuestionMarks +
+                    "]+(?=[" +
+                    RegularExpressionStrings.Blanks +
+                    "]|$)") },
+
+                // Split into inline chunks
+                { "chunk", new Regex(
+                    @"\[\[[^\[\]\n]+\]\]|" +       // [[wiki link]]
+                    @"\{\{[^\{\}\n]+\}\}|" +       // {{template}}
+                    @"\[[^\[\]\n]+\]|" +             // [ext. link]
+                    @"<\/?[^<>\[\]\{\}\n]+>|" +     // <html>
+                    @"\[\[[^\[\]\|\n]+\]\]\||" + // [[wiki link|
+                    @"\{\{[^\{\}\|\n]+\||" +       // {{template|
+                    @"\b((https?:|)\/\/)[^\x00-\x20\s""\[\]\x7f]+" // link
+                )},
+
+                // Split into words, multi-char markup, and chars
+			    // Letters speed-up: \w+
+                { "word", new Regex(
+                    @"(\w+|[_" +
+                    RegularExpressionStrings.Letters +
+                    "])+(['’][_" +
+                    RegularExpressionStrings.Letters +
+                    @"]*)*|\[\[|\]\]|\{\{|\}\}|&\w+;|'''|''|==+|\{\||\|\}|\|-|." // TODO: these backslashes are probably wrong
+                )},
+
+                // Split into chars
+                { "character", new Regex(".") }
+            };
 
             /// <summary>
             /// Regex to detect blank tokens.
             /// </summary>
             public static Regex BlankOnlyToken { get; set; } = new Regex("[^" +
-                Blanks +
-                NewLinesAll +
-                NewParagraph +
+                RegularExpressionStrings.Blanks +
+                RegularExpressionStrings.NewLinesAll +
+                RegularExpressionStrings.NewParagraph +
                 "]");
 
             /// <summary>
             /// Regex for sliding gaps: newlines and space/word breaks.
             /// </summary>
             public static Regex SlideStop { get; set; } = new Regex("[" +
-                NewLinesAll +
-                NewParagraph +
+                RegularExpressionStrings.NewLinesAll +
+                RegularExpressionStrings.NewParagraph +
                 "]$");
 
             /// <summary>
             /// Regex for sliding gaps: space/word breaks.
             /// </summary>
             public static Regex SlideBorder { get; set; } = new Regex("[" +
-                Blanks +
+                RegularExpressionStrings.Blanks +
                 "]$");
 
             /// <summary>
@@ -216,91 +257,53 @@ namespace WikEdDiff
             /// <summary>
             /// Regex for clipping.
             /// </summary>
-            public static Regex ClipLine { get; set; } = new Regex("[" + NewLinesAll + NewParagraph + "]+");
+            public static Regex ClipLine { get; set; } = new Regex("[" + RegularExpressionStrings.NewLinesAll + RegularExpressionStrings.NewParagraph + "]+");
 
             /// <summary>
             /// Regex for clipping.
             /// </summary>
-            public static Regex ClipHeading { get; set; } = new Regex(@"( ^|\\n)(==+.+?==+|\\{\\||\\|\\}).*?(?=\\n|$)");
+            public static Regex ClipHeading { get; set; } = new Regex(@"( ^|\n)(==+.+?==+|\{\||\|\}).*?(?=\n|$)");
 
             /// <summary>
             /// Regex for clipping.
             /// </summary>
-            public static Regex ClipParagraph { get; set; } = new Regex(@"( (\\r\\n|\\n|\\r){2,}|[" + NewParagraph + "])+");
+            public static Regex ClipParagraph { get; set; } = new Regex(@"( (\r\n|\n|\r){2,}|[" + RegularExpressionStrings.NewParagraph + "])+");
 
             /// <summary>
             /// Regex for clipping.
             /// </summary>
-            public static Regex ClipBlank { get; set; } = new Regex("[" + Blanks + "]+");
+            public static Regex ClipBlank { get; set; } = new Regex("[" + RegularExpressionStrings.Blanks + "]+");
 
             /// <summary>
             /// Regex for clipping.
             /// </summary>
-            public static Regex ClipTrimNewLinesLeft { get; set; } = new Regex("[" + NewLinesAll + NewParagraph + "]+$");
+            public static Regex ClipTrimNewLinesLeft { get; set; } = new Regex("[" + RegularExpressionStrings.NewLinesAll + RegularExpressionStrings.NewParagraph + "]+$");
 
             /// <summary>
             /// Regex for clipping.
             /// </summary>
-            public static Regex ClipTrimNewLinesRight { get; set; } = new Regex("^[" + NewLinesAll + NewParagraph + "]+");
+            public static Regex ClipTrimNewLinesRight { get; set; } = new Regex("^[" + RegularExpressionStrings.NewLinesAll + RegularExpressionStrings.NewParagraph + "]+");
 
             /// <summary>
             /// Regex for clipping.
             /// </summary>
-            public static Regex ClipTrimBlanksLeft { get; set; } = new Regex("[" + Blanks + NewLinesAll + NewParagraph + "]+$");
+            public static Regex ClipTrimBlanksLeft { get; set; } = new Regex("[" + RegularExpressionStrings.Blanks + RegularExpressionStrings.NewLinesAll + RegularExpressionStrings.NewParagraph + "]+$");
 
             /// <summary>
             /// Regex for clipping.
             /// </summary>
-            public static Regex ClipTrimBlanksRight { get; set; } = new Regex("^[" + Blanks + NewLinesAll + NewParagraph + "]+");
+            public static Regex ClipTrimBlanksRight { get; set; } = new Regex("^[" + RegularExpressionStrings.Blanks + RegularExpressionStrings.NewLinesAll + RegularExpressionStrings.NewParagraph + "]+");
 
-            /// <summary>
-            /// New line characters without \n and \r.
-            /// </summary>
-            public static Regex NewLines { get; set; } = new Regex(@"\\u0085\\u2028");
-
-            /// <summary>
-            /// New line characters with \n and \r.
-            /// </summary>
-            public static Regex NewLinesAll { get; set; } = new Regex(@"\\n\\r\\u0085\\u2028");
-
-            /// <summary>
-            /// Breaking white space characters without \n, \r, and \f.
-            /// </summary>
-            public static Regex Blanks { get; set; } = new Regex(@" \\t\\x0b\\u2000-\\u200b\\u202f\\u205f\\u3000");
-
-            /// <summary>
-            /// Full stops without '.'.
-            /// </summary>
-            public static Regex FullStops { get; set; } = new Regex(@"\\u0589\\u06D4\\u0701\\u0702\\u0964\\u0DF4\\u1362\\u166E\\u1803\\u1809" +
-                @"\\u2CF9\\u2CFE\\u2E3C\\u3002\\uA4FF\\uA60E\\uA6F3\\uFE52\\uFF0E\\uFF61");
-
-            /// <summary>
-            /// New paragraph characters without \n and \r.
-            /// </summary>
-            public static Regex NewParagraph { get; set; } = new Regex(@"\\f\\u2029");
-
-            /// <summary>
-            /// Exclamation marks without '!'.
-            /// </summary>
-            public static Regex ExclamationMarks { get; set; } = new Regex(@"\\u01C3\\u01C3\\u01C3\\u055C\\u055C\\u07F9\\u1944\\u1944" +
-                @"\\u203C\\u203C\\u2048\\u2048\\uFE15\\uFE57\\uFF01");
-
-            /// <summary>
-            /// Question marks without '?'.
-            /// </summary>
-            public static Regex QuestionMarks { get; set; } = new Regex(@"\\u037E\\u055E\\u061F\\u1367\\u1945\\u2047\\u2049" +
-                @"\\u2CFA\\u2CFB\\u2E2E\\uA60F\\uA6F7\\uFE56\\uFF1F");
-
-            public static Regex CountWords { get; set; } = new Regex(@"(\\w+|[_" + Letters + "])+(['’][_" + Letters + "]*)*");
+            public static Regex CountWords { get; set; } = new Regex(@"(\w+|[_" + RegularExpressionStrings.Letters + "])+(['’][_" + RegularExpressionStrings.Letters + "]*)*");
 
             public static Regex CountChunks { get; set; } = new Regex(
-                @"\\[\\[[^\\[\\]\\n]+\\]\\]|" +       // [[wiki link]]
-                @"\\{\\{[^\\{\\}\\n]+\\}\\}|" +       // {{template}}
-                @"\\[[^\\[\\]\\n]+\\]|" +             // [ext. link]
-                @"<\\/?[^<>\\[\\]\\{\\}\\n]+>|" +     // <html>
-                @"\\[\\[[^\\[\\]\\|\\n]+\\]\\]\\||" + // [[wiki link|
-                @"\\{\\{[^\\{\\}\\|\\n]+\\||" +       // {{template|
-                @"\\b((https?:|)\\/\\/)[^\\x00-\\x20\\s""\\[\\]\\x7f]+" // link
+                @"\[\[[^\[\]\n]+\]\]|" +       // [[wiki link]]
+                @"\{\{[^\{\}\n]+\}\}|" +       // {{template}}
+                @"\[[^\[\]\n]+\]|" +             // [ext. link]
+                @"<\/?[^<>\[\]\{\}\n]+>|" +     // <html>
+                @"\[\[[^\[\]\|\n]+\]\]\||" + // [[wiki link|
+                @"\{\{[^\{\}\|\n]+\||" +       // {{template|
+                @"\b((https?:|)\/\/)[^\x00-\x20\s""\[\]\x7f]+" // link
             );
         }
     }

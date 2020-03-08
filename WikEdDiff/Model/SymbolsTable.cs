@@ -12,7 +12,7 @@ namespace WikEdDiff.Model
         /// </summary>
         public List<Symbol> Token { get; set; } = new List<Symbol>();
 
-        public Dictionary<string, int> HashTable { get; set; }
+        public Dictionary<string, int> HashTable { get; set; } = new Dictionary<string, int>();
 
         /// <summary>
         /// Flag: at least one unique token pair has been linked.

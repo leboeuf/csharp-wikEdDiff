@@ -554,8 +554,18 @@ namespace WikEdDiff
         /// <param name="oldStart">Text object tokens indice.</param>
         /// <param name="up"></param>
         /// <param name="recursionLevel">Recursion level.</param>
-        private void CalculateDiff(string level, bool recurse = false, bool repeating = false, int newStart = 0, int oldStart = 0, bool up = false, int recursionLevel = 0)
+        private void CalculateDiff(string level, bool recurse = false, bool repeating = false, int? newStart = null, int? oldStart = null, bool up = false, int recursionLevel = 0)
         {
+            // Set defaults
+            if (newStart == null)
+            {
+                newStart = _newText.First;
+            }
+            if (oldStart == null)
+            {
+                oldStart = _oldText.First;
+            }
+
             // Get object symbols table and linked region borders
             SymbolsTable symbols;
             List<Tuple<int, int>> bordersDown;
@@ -584,13 +594,13 @@ namespace WikEdDiff
 
             // Cycle through new text tokens list
             int? ind = newStart;
-            while (ind != null) // TODO: fix this infinite loop
+            while (ind != null)
             {
                 if (_newText.Tokens[ind.Value].Link == null)
                 {
                     // Add new entry to symbol table
-                    var token = _newText.Tokens[ind.Value].TokenString; // TODO: not sure of lines 1654-1655
-                    if (true) // TODO: line 1654
+                    var token = _newText.Tokens[ind.Value].TokenString;
+                    if (!symbols.HashTable.ContainsKey(token))
                     {
                         symbols.HashTable[token] = symbols.Token.Count;
                         symbols.Token.Add(new Symbol
@@ -634,13 +644,13 @@ namespace WikEdDiff
 
             // Cycle through old text tokens list
             int? j = oldStart;
-            while (j != null) // TODO: fix this infinite loop
+            while (j != null)
             {
                 if (_oldText.Tokens[j.Value].Link == null)
                 {
                     // Add new entry to symbol table
-                    var token = _oldText.Tokens[j.Value].TokenString; // TODO: not sure of these lines
-                    if (true) // TODO: line 1698
+                    var token = _oldText.Tokens[j.Value].TokenString;
+                    if (!symbols.HashTable.ContainsKey(token))
                     {
                         symbols.HashTable[token] = symbols.Token.Count;
                         symbols.Token.Add(new Symbol
@@ -739,12 +749,10 @@ namespace WikEdDiff
                                         for (int ii = 0; ii < wordsLength; ii++)
                                         {
                                             var word = words[ii];
-                                            if (_oldText.Words[word] == 1 &&
-                                                _newText.Words[word] == 1
-                                                // TODO: lines 1792-1793
-                                                // &&    Object.prototype.hasOwnProperty.call(this.oldText.words, word) == true &&
-                                                //Object.prototype.hasOwnProperty.call(this.newText.words, word) == true
-                                                )
+                                            if (_oldText.Words.ContainsKey(word) &&
+                                                _oldText.Words[word] == 1 &&
+                                                _newText.Words.ContainsKey(word) &&
+                                                _newText.Words[word] == 1)
                                             {
                                                 unique = true;
                                                 break;
@@ -1536,7 +1544,7 @@ namespace WikEdDiff
                 var groupEnd = Blocks[blockEnd].Group;
 
                 // Recusively find path of groups in increasing old group order with longest char length
-                var cache = new Path[0];
+                var cache = new List<Path>();
                 var maxChars = 0;
                 List<int> maxPath = null;
 
@@ -2034,7 +2042,7 @@ namespace WikEdDiff
         /// <param name="groupEnd">Path last group.</param>
         /// <param name="cache">Cache object, contains returnObj for start.</param>
         /// <returns></returns>
-        private Path FindMaxPath(int start, int groupEnd, Path[] cache)
+        private Path FindMaxPath(int start, int groupEnd, List<Path> cache)
         {
             // Find longest sub-path
             var maxChars = 0;
@@ -2078,13 +2086,13 @@ namespace WikEdDiff
 		    returnObj.Chars += Groups[start].Chars;
 
 		    // Save path to cache (deep copy)
-		    if (cache[start] == null)
+		    if (cache.Count < start)
             {
-			    cache[start] = new Path
+			    cache.Add(new Path
                 {
                     Paths = returnObj.Paths,
                     Chars = returnObj.Chars
-                };
+                });
 		    }
 
 		    return returnObj;
@@ -2313,7 +2321,7 @@ namespace WikEdDiff
                 {
                     var regExpMatch = regExpMatches[i];
                     lines.Add(regExpMatch.Index);
-                    //lastIndex = ... // TODO (line 3341)
+                    lastIndex += regExpMatch.Value.Length;
                 }
                 if (lines[0] != 0)
                 {
@@ -2343,7 +2351,7 @@ namespace WikEdDiff
                 {
                     var regExpMatch = regExpMatches[i];
                     paragraphs.Add(regExpMatch.Index);
-                    //lastIndex = ... // TODO (line 3363)
+                    lastIndex += regExpMatch.Value.Length;
                 }
                 if (paragraphs[0] != 0)
                 {
