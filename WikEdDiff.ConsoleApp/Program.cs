@@ -15,7 +15,12 @@
                 }
             };
 
-            wikEdDiff.Diff(originalText, modifiedText);
+            var html = wikEdDiff.Diff(originalText, modifiedText);
+
+            // Save html file and open it
+            var file = @"C:/Users/dev/Desktop/test2.html";
+            System.IO.File.WriteAllText(file, html);
+            System.Diagnostics.Process.Start("cmd.exe", "/c " + file);
         }
     }
 }

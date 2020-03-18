@@ -90,13 +90,12 @@ namespace WikEdDiff
             // Trap trivial changes: no change
             if (_newText.Text == _oldText.Text)
             {
-                // TODO: line 956
-                //this.html =
-                //    Configuration.htmlCode.containerStart +
-                //    Configuration.htmlCode.noChangeStart +
-                //    this.htmlEscape(Configuration.msg['wiked-diff-empty']) +
-                //    Configuration.htmlCode.noChangeEnd +
-                //    Configuration.htmlCode.containerEnd;
+                Html =
+                    WikEdDiffConfiguration.HtmlCode.ContainerStart +
+                    WikEdDiffConfiguration.HtmlCode.NoChangeStart +
+                    HtmlEscape(WikEdDiffConfiguration.Messages["wiked-diff-empty"]) +
+                    WikEdDiffConfiguration.HtmlCode.NoChangeEnd +
+                    WikEdDiffConfiguration.HtmlCode.ContainerEnd;
                 return Html;
             }
 
@@ -104,15 +103,14 @@ namespace WikEdDiff
             if (string.IsNullOrEmpty(_oldText.Text) ||
                 (_oldText.Text == "\n" && _newText.Text.EndsWith("\n")))
             {
-                // TODO: line 972
-                //this.html =
-                //Configuration.htmlCode.containerStart +
-                //Configuration.htmlCode.fragmentStart +
-                //Configuration.htmlCode.insertStart +
-                //this.htmlEscape(this.newText.text) +
-                //Configuration.htmlCode.insertEnd +
-                //Configuration.htmlCode.fragmentEnd +
-                //Configuration.htmlCode.containerEnd;
+                Html =
+                    WikEdDiffConfiguration.HtmlCode.ContainerStart +
+                    WikEdDiffConfiguration.HtmlCode.FragmentStart +
+                    WikEdDiffConfiguration.HtmlCode.InsertStart +
+                    HtmlEscape(_newText.Text) +
+                    WikEdDiffConfiguration.HtmlCode.InsertEnd +
+                    WikEdDiffConfiguration.HtmlCode.FragmentEnd +
+                    WikEdDiffConfiguration.HtmlCode.ContainerEnd;
                 return Html;
             }
 
@@ -120,15 +118,14 @@ namespace WikEdDiff
             if (string.IsNullOrEmpty(_newText.Text) ||
                 (_newText.Text == "\n" && _oldText.Text.EndsWith("\n")))
             {
-                // TODO: line 990
-                //this.html =
-                //Configuration.htmlCode.containerStart +
-                //Configuration.htmlCode.fragmentStart +
-                //Configuration.htmlCode.deleteStart +
-                //this.htmlEscape(this.oldText.text) +
-                //Configuration.htmlCode.deleteEnd +
-                //Configuration.htmlCode.fragmentEnd +
-                //Configuration.htmlCode.containerEnd;
+                Html =
+                    WikEdDiffConfiguration.HtmlCode.ContainerStart +
+                    WikEdDiffConfiguration.HtmlCode.FragmentStart +
+                    WikEdDiffConfiguration.HtmlCode.DeleteStart +
+                    HtmlEscape(_oldText.Text) +
+                    WikEdDiffConfiguration.HtmlCode.DeleteEnd +
+                    WikEdDiffConfiguration.HtmlCode.FragmentEnd +
+                    WikEdDiffConfiguration.HtmlCode.ContainerEnd;
                 return Html;
             }
 
@@ -211,12 +208,11 @@ namespace WikEdDiff
             // No change
             if (string.IsNullOrEmpty(Html))
             {
-                // TODO: line 1177
-                //Html = Configuration.htmlCode.containerStart +
-                //Configuration.htmlCode.noChangeStart +
-                //this.htmlEscape(Configuration.msg['wiked-diff-empty']) +
-                //Configuration.htmlCode.noChangeEnd +
-                //Configuration.htmlCode.containerEnd;
+                Html = WikEdDiffConfiguration.HtmlCode.ContainerStart +
+                    WikEdDiffConfiguration.HtmlCode.NoChangeStart +
+                    HtmlEscape(WikEdDiffConfiguration.Messages["wiked-diff-empty"]) +
+                    WikEdDiffConfiguration.HtmlCode.NoChangeEnd +
+                    WikEdDiffConfiguration.HtmlCode.ContainerEnd;
             }
 
             return Html;
@@ -465,7 +461,7 @@ namespace WikEdDiff
             gapsLength = gaps.Count;
             for (gap = 0; gap < gapsLength; gap++)
             {
-                if (gaps[gap.Value].CharSplit == true)
+                if (gaps[gap.Value].CharSplit)
                 {
                     // Cycle through new text tokens list, link spaces, and split into chars
                     var ii = gaps[gap.Value].NewFirst;
@@ -748,7 +744,7 @@ namespace WikEdDiff
                                 }
 
                                 // Set unique
-                                if (unique == true)
+                                if (unique)
                                 {
                                     newTokenObj.Unique = true;
                                     oldTokenObj.Unique = true;
@@ -942,7 +938,7 @@ namespace WikEdDiff
 			 * ("and" in "and this a and b that" -> "and this a and b that")
 			 */
 
-            if (repeating == false && Configuration.RepeatedDiff == true)
+            if (repeating == false && Configuration.RepeatedDiff)
             {
                 var repeat = true;
                 CalculateDiff(level, recurse, repeat, newStart, oldStart, up, recursionLevel);
@@ -955,8 +951,8 @@ namespace WikEdDiff
 			 */
 
             if (
-                recurse == true &&
-                Configuration.RepeatedDiff == true &&
+                recurse &&
+                Configuration.RepeatedDiff &&
                 recursionLevel < Configuration.RecursionMax
             )
             {
@@ -1050,21 +1046,21 @@ namespace WikEdDiff
             // Only for more complex texts that actually have blocks of minimum block length
             var unlinkCount = 0;
             if (
-                Configuration.UnlinkBlocks == true &&
+                Configuration.UnlinkBlocks &&
                 Configuration.BlockMinLength > 0 &&
                 MaxWords >= Configuration.BlockMinLength
             )
             {
                 // Repeat as long as unlinking is possible
                 var unlinked = true;
-                while (unlinked == true && unlinkCount < Configuration.UnlinkMax)
+                while (unlinked && unlinkCount < Configuration.UnlinkMax)
                 {
 
                     // Convert '=' to '+'/'-' pairs
                     unlinked = UnlinkBlocks();
 
                     // Start over after conversion
-                    if (unlinked == true)
+                    if (unlinked)
                     {
                         unlinkCount++;
                         SlideGaps(_newText, _oldText);
@@ -1162,7 +1158,7 @@ namespace WikEdDiff
                             {
 
                                 // Stop at line break
-                                if (regExpSlideStop.IsMatch(text.Tokens[front.Value].TokenString) == true)
+                                if (regExpSlideStop.IsMatch(text.Tokens[front.Value].TokenString))
                                 {
                                     frontStop = front;
                                     break;
@@ -1329,7 +1325,7 @@ namespace WikEdDiff
                     {
                         text += _oldText.Tokens[j.Value].TokenString;
                         count++;
-                        if (_newText.Tokens[i.Value].Unique == true)
+                        if (_newText.Tokens[i.Value].Unique)
                         {
                             unique = true;
                         }
@@ -2694,9 +2690,364 @@ namespace WikEdDiff
             }
         }
 
-        private void GetDiffHtml()
+        /// <summary>
+        /// Create html formatted diff code from diff fragments.
+        /// </summary>
+        /// <param name="version">"new" or "old": only text from new or old version.</param>
+        private void GetDiffHtml(string version = "")
         {
-            throw new NotImplementedException();//TODO
+            // No change, only one unchanged block in containers
+            if (Fragments.Count == 5 && Fragments[2].Type == "=")
+            {
+                Html = "";
+                return;
+            }
+
+            // Cycle through fragments
+            var htmlFragments = new List<string>();
+            var fragmentsLength = Fragments.Count;
+            for (var fragment = 0; fragment < fragmentsLength; fragment++)
+            {
+                var text = Fragments[fragment].Text;
+                var type = Fragments[fragment].Type;
+                var color = Fragments[fragment].Color;
+                var html = "";
+
+                // Test if text is blanks-only or a single character
+                var blank = false;
+                if (text != "")
+                {
+                    blank = WikEdDiffConfiguration.RegularExpressions.BlankBlock.IsMatch(text);
+                }
+
+                // Add container start markup
+                if (type == "{")
+                {
+                    html = WikEdDiffConfiguration.HtmlCode.ContainerStart;
+                }
+
+                // Add container end markup
+                else if (type == "}")
+                {
+                    html = WikEdDiffConfiguration.HtmlCode.ContainerEnd;
+                }
+
+                // Add fragment start markup
+                if (type == "[")
+                {
+                    html = WikEdDiffConfiguration.HtmlCode.FragmentStart;
+                }
+
+                // Add fragment end markup
+                else if (type == "]")
+                {
+                    html = WikEdDiffConfiguration.HtmlCode.FragmentEnd;
+                }
+
+                // Add fragment separator markup
+                else if (type == ",")
+                {
+                    html = WikEdDiffConfiguration.HtmlCode.Separator;
+                }
+
+                // Add omission markup
+                if (type == "~")
+                {
+                    html = WikEdDiffConfiguration.HtmlCode.OmittedChars;
+                }
+
+                // Add omission markup
+                if (type == " ~")
+                {
+                    html = " " + WikEdDiffConfiguration.HtmlCode.OmittedChars;
+                }
+
+                // Add omission markup
+                if (type == "~ ")
+                {
+                    html = WikEdDiffConfiguration.HtmlCode.OmittedChars + " ";
+                }
+
+                // Add colored left-pointing block start markup
+                else if (type == "(<")
+                {
+                    if (version != "old")
+                    {
+                        // Get title
+                        string title;
+                        if (Configuration.NoUnicodeSymbols)
+                        {
+                            title = WikEdDiffConfiguration.Messages["wiked-diff-block-left-nounicode"];
+                        }
+                        else
+                        {
+                            title = WikEdDiffConfiguration.Messages["wiked-diff-block-left"];
+                        }
+
+                        // Get html
+                        if (Configuration.ColoredBlocks)
+                        {
+                            html = WikEdDiffConfiguration.HtmlCode.BlockColoredStart;
+                        }
+                        else
+                        {
+                            html = WikEdDiffConfiguration.HtmlCode.BlockStart;
+                        }
+                        html = HtmlCustomize(html, color, title);
+                    }
+                }
+
+                // Add colored right-pointing block start markup
+                else if (type == "(>")
+                {
+                    if (version != "old")
+                    {
+
+                        // Get title
+                        string title;
+                        if (Configuration.NoUnicodeSymbols)
+                        {
+                            title = WikEdDiffConfiguration.Messages["wiked-diff-block-right-nounicode"];
+                        }
+                        else
+                        {
+                            title = WikEdDiffConfiguration.Messages["wiked-diff-block-right"];
+                        }
+
+                        // Get html
+                        if (Configuration.ColoredBlocks)
+                        {
+                            html = WikEdDiffConfiguration.HtmlCode.BlockColoredStart;
+                        }
+                        else
+                        {
+                            html = WikEdDiffConfiguration.HtmlCode.BlockStart;
+                        }
+                        html = HtmlCustomize(html, color, title);
+                    }
+                }
+
+                // Add colored block end markup
+                else if (type == " )")
+                {
+                    if (version != "old")
+                    {
+                        html = WikEdDiffConfiguration.HtmlCode.BlockEnd;
+                    }
+                }
+
+                // Add '=' (unchanged) text and moved block
+                if (type == "=")
+                {
+                    text = HtmlEscape(text);
+                    if (color != null)
+                    {
+                        if (version != "old")
+                        {
+                            html = MarkupBlanks(text, true);
+                        }
+                    }
+                    else
+                    {
+                        html = MarkupBlanks(text);
+                    }
+                }
+
+                // Add '-' text
+                else if (type == "-")
+                {
+                    if (version != "new")
+                    {
+
+                        // For old version skip "-" inside moved group
+                        if (version != "old" || color == null)
+                        {
+                            text = HtmlEscape(text);
+                            text = MarkupBlanks(text, true);
+                            if (blank)
+                            {
+                                html = WikEdDiffConfiguration.HtmlCode.DeleteStartBlank;
+                            }
+                            else
+                            {
+                                html = WikEdDiffConfiguration.HtmlCode.DeleteStart;
+                            }
+                            html += text + WikEdDiffConfiguration.HtmlCode.DeleteEnd;
+                        }
+                    }
+                }
+
+                // Add '+' text
+                else if (type == "+")
+                {
+                    if (version != "old")
+                    {
+                        text = HtmlEscape(text);
+                        text = MarkupBlanks(text, true);
+                        if (blank)
+                        {
+                            html = WikEdDiffConfiguration.HtmlCode.InsertStartBlank;
+                        }
+                        else
+                        {
+                            html = WikEdDiffConfiguration.HtmlCode.InsertStart;
+                        }
+                        html += text + WikEdDiffConfiguration.HtmlCode.InsertEnd;
+                    }
+                }
+
+                // Add '<' and '>' code
+                else if (type == "<" || type == ">")
+                {
+                    if (version != "new")
+                    {
+
+                        // Display as deletion at original position
+                        if (Configuration.ShowBlockMoves == false || version == "old")
+                        {
+                            text = HtmlEscape(text);
+                            text = MarkupBlanks(text, true);
+                            if (version == "old")
+                            {
+                                if (Configuration.ColoredBlocks)
+                                {
+                                    html =
+                                        HtmlCustomize(WikEdDiffConfiguration.HtmlCode.BlockColoredStart, color) +
+                                        text +
+                                        WikEdDiffConfiguration.HtmlCode.BlockEnd;
+                                }
+                                else
+                                {
+                                    html =
+                                        HtmlCustomize(WikEdDiffConfiguration.HtmlCode.BlockStart, color) +
+                                        text +
+                                        WikEdDiffConfiguration.HtmlCode.BlockEnd;
+                                }
+                            }
+                            else
+                            {
+                                if (blank)
+                                {
+                                    html =
+                                        WikEdDiffConfiguration.HtmlCode.DeleteStartBlank +
+                                        text +
+                                        WikEdDiffConfiguration.HtmlCode.DeleteEnd;
+                                }
+                                else
+                                {
+                                    html = WikEdDiffConfiguration.HtmlCode.DeleteStart + text + WikEdDiffConfiguration.HtmlCode.DeleteEnd;
+                                }
+                            }
+                        }
+
+                        // Display as mark
+                        else
+                        {
+                            if (type == "<")
+                            {
+                                if (Configuration.ColoredBlocks)
+                                {
+                                    html = HtmlCustomize(WikEdDiffConfiguration.HtmlCode.MarkLeftColored, color, text);
+                                }
+                                else
+                                {
+                                    html = HtmlCustomize(WikEdDiffConfiguration.HtmlCode.MarkLeft, color, text);
+                                }
+                            }
+                            else
+                            {
+                                if (Configuration.ColoredBlocks)
+                                {
+                                    html = HtmlCustomize(WikEdDiffConfiguration.HtmlCode.MarkRightColored, color, text);
+                                }
+                                else
+                                {
+                                    html = HtmlCustomize(WikEdDiffConfiguration.HtmlCode.MarkRight, color, text);
+                                }
+                            }
+                        }
+                    }
+                }
+                htmlFragments.Add(html);
+            }
+
+            // Join fragments
+            Html = string.Join("", htmlFragments);
+        }
+
+        /// <summary>
+        /// Markup tabs, newlines, and spaces in diff fragment text.
+        /// </summary>
+        /// <param name="html">Text code to be marked-up</param>
+        /// <param name="highlight">Highlight newlines and spaces in addition to tabs</param>
+        /// <returns>Marked-up text.</returns>
+        private string MarkupBlanks(string html, bool highlight = false)
+        {
+            if (highlight)
+            {
+                html = new Regex(" ").Replace(html, WikEdDiffConfiguration.HtmlCode.Space);
+                html = new Regex("\n").Replace(html, WikEdDiffConfiguration.HtmlCode.Newline);
+            }
+            html = new Regex("\t").Replace(html, WikEdDiffConfiguration.HtmlCode.Tab);
+            return html;
+        }
+
+        /// <summary>
+        /// Customize html code fragments.
+        /// Replaces:
+        ///   {number}:    class/color/block/mark/id number
+        ///   {title}:     title attribute (popup)
+        ///   {nounicode}: noUnicodeSymbols fallback
+        ///   input: html, number: block number, title: title attribute (popup) text
+        /// </summary>
+        /// <returns>Customized html code.</returns>
+        private string HtmlCustomize(string html, int? number, string title = "")
+        {
+            // Replace {number} with class/color/block/mark/id number
+            html = new Regex(@"\{number\}").Replace(html, number.ToString());
+
+            // Replace {nounicode} with wikEdDiffNoUnicode class name
+            if (Configuration.NoUnicodeSymbols)
+            {
+                html = new Regex(@"\{nounicode\}").Replace(html, " wikEdDiffNoUnicode");
+            }
+            else
+            {
+                html = new Regex(@"\{nounicode\}").Replace(html, "");
+            }
+
+            // Shorten title text, replace {title}
+            if (!string.IsNullOrEmpty(title))
+            {
+                var max = 512;
+                var end = 128;
+                var gapMark = " [...] ";
+                if (title.Length > max)
+                {
+                    title =
+                        title.Substring(0, max - gapMark.Length - end) +
+                        gapMark +
+                        title.Substring(title.Length - end);
+                }
+                title = HtmlEscape(title);
+                title = new Regex("\t").Replace(title, "&nbsp;&nbsp;");
+                title = new Regex("  ").Replace(title, "&nbsp;&nbsp;");
+                html = new Regex(@"\{title\}").Replace(html, title);
+            }
+            return html;
+        }
+
+        /// <summary>
+        /// Replace html-sensitive characters in output text with character entities.
+        /// </summary>
+        /// <returns>Escaped html code.</returns>
+        private string HtmlEscape(string html)
+        {
+            html = new Regex("&").Replace(html, "&amp;");
+            html = new Regex("<").Replace("", "&lt;");
+            html = new Regex(">").Replace("", "&gt;");
+            html = new Regex("\"").Replace("", "&quot;");
+		    return html;
         }
     }
 

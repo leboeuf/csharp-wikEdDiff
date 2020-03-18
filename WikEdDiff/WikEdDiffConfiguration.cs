@@ -89,7 +89,7 @@ namespace WikEdDiff
         // Maximum number of lines to search for clip position
         public int ClipLinesRightMax { get; set; } = 10;
         public int ClipLinesLeftMax { get; set; } = 10;
-        
+
         // Skip clipping if ranges are too close
         public int ClipSkipLines { get; set; } = 5;
         public int ClipSkipChars { get; set; } = 1000;
@@ -143,23 +143,23 @@ namespace WikEdDiff
             /// <summary>
             /// New line characters without \n and \r.
             /// </summary>
-            public static Regex NewLines { get; set; } = new Regex(@"\u0085\u2028");
+            public static string NewLines = @"\u0085\u2028";
 
             /// <summary>
             /// New line characters with \n and \r.
             /// </summary>
-            public static Regex NewLinesAll { get; set; } = new Regex(@"\n\r\u0085\u2028");
+            public static string NewLinesAll = @"\n\r\u0085\u2028";
 
             /// <summary>
             /// Breaking white space characters without \n, \r, and \f.
             /// </summary>
-            public static Regex Blanks { get; set; } = new Regex(@" \t\x0b\u2000-\u200b\u202f\u205f\u3000");
+            public static string Blanks = @" \t\x0b\u2000-\u200b\u202f\u205f\u3000";
 
             /// <summary>
             /// Full stops without '.'.
             /// </summary>
-            public static Regex FullStops { get; set; } = new Regex(@"\u0589\u06D4\u0701\u0702\u0964\u0DF4\u1362\u166E\u1803\u1809" +
-                @"\u2CF9\u2CFE\u2E3C\u3002\uA4FF\uA60E\uA6F3\uFE52\uFF0E\uFF61");
+            public static string FullStops = @"\u0589\u06D4\u0701\u0702\u0964\u0DF4\u1362\u166E\u1803\u1809" +
+                @"\u2CF9\u2CFE\u2E3C\u3002\uA4FF\uA60E\uA6F3\uFE52\uFF0E\uFF61";
 
             /// <summary>
             /// New paragraph characters without \n and \r.
@@ -169,18 +169,21 @@ namespace WikEdDiff
             /// <summary>
             /// Exclamation marks without '!'.
             /// </summary>
-            public static Regex ExclamationMarks { get; set; } = new Regex(@"\u01C3\u01C3\u01C3\u055C\u055C\u07F9\u1944\u1944" +
-                @"\u203C\u203C\u2048\u2048\uFE15\uFE57\uFF01");
+            public static string ExclamationMarks = @"\u01C3\u01C3\u01C3\u055C\u055C\u07F9\u1944\u1944" +
+                @"\u203C\u203C\u2048\u2048\uFE15\uFE57\uFF01";
 
             /// <summary>
             /// Question marks without '?'.
             /// </summary>
-            public static Regex QuestionMarks { get; set; } = new Regex(@"\u037E\u055E\u061F\u1367\u1945\u2047\u2049" +
-                @"\u2CFA\u2CFB\u2E2E\uA60F\uA6F7\uFE56\uFF1F");
+            public static string QuestionMarks = @"\u037E\u055E\u061F\u1367\u1945\u2047\u2049" +
+                @"\u2CFA\u2CFB\u2E2E\uA60F\uA6F7\uFE56\uFF1F";
         }
 
         public static class RegularExpressions
         {
+            /// <summary>
+            /// Regular expressions used for splitting text into tokens0=.
+            /// </summary>
             public static Dictionary<string, Regex> Split = new Dictionary<string, Regex>
             {
                 // Split into paragraphs, after double newlines
@@ -305,6 +308,88 @@ namespace WikEdDiff
                 @"\{\{[^\{\}\|\n]+\||" +       // {{template|
                 @"\b((https?:|)\/\/)[^\x00-\x20\s""\[\]\x7f]+" // link
             );
+        }
+
+        public static Dictionary<string, string> Messages = new Dictionary<string, string>
+        {
+            { "wiked-diff-empty", "(No difference)" },
+            { "wiked-diff-same", "=" },
+            { "wiked-diff-ins",  "+" },
+            { "wiked-diff-del",  "-" },
+            { "wiked-diff-block-left", "◀" },
+            { "wiked-diff-block-right", "▶" },
+            { "wiked-diff-block-left-nounicode", "<" },
+            { "wiked-diff-block-right-nounicode", ">" },
+            { "wiked-diff-error", "Error: diff not consistent with versions!" }
+        };
+
+        /// <summary>
+        /// Add output html fragments to configuration settings.
+        /// Dynamic replacements:
+        ///   {number}: class/color/block/mark/id number
+        ///   {title}: title attribute (popup)
+        ///   {nounicode}: noUnicodeSymbols fallback
+        /// </summary>
+        public static class HtmlCode
+        {
+            public static string NoChangeStart = "<div class=\"wikEdDiffNoChange\" title=\"" +
+                Messages["wiked-diff-same"] +
+                "\">";
+            public static string NoChangeEnd = "</div>";
+
+            public static string ContainerStart = "<div class=\"wikEdDiffContainer\" id=\"wikEdDiffContainer\">";
+            public static string ContainerEnd = "</div>";
+
+            public static string FragmentStart = "<pre class=\"wikEdDiffFragment\" style=\"white-space: pre-wrap;\">";
+            public static string FragmentEnd = "</pre>";
+            public static string Separator = "<div class=\"wikEdDiffSeparator\"></div>";
+
+            public static string InsertStart = "<span class=\"wikEdDiffInsert\" title=\"" +
+                Messages["wiked-diff-ins"] +
+                "\">";
+            public static string InsertStartBlank = "<span class=\"wikEdDiffInsert wikEdDiffInsertBlank\" title=\"" +
+                Messages["wiked-diff-ins"] +
+                "\">";
+            public static string InsertEnd = "</span>";
+
+            public static string DeleteStart = "<span class=\"wikEdDiffDelete\" title=\"" +
+                Messages["wiked-diff-del"] +
+                "\">";
+            public static string DeleteStartBlank = "<span class=\"wikEdDiffDelete wikEdDiffDeleteBlank\" title=\"" +
+                Messages["wiked-diff-del"] +
+                "\">";
+            public static string DeleteEnd = "</span>";
+
+            public static string BlockStart = "<span class=\"wikEdDiffBlock\"" +
+                "title=\"{title}\" id=\"wikEdDiffBlock{number}\"" +
+                "onmouseover=\"wikEdDiffBlockHandler(undefined, this, 'mouseover');\">";
+            public static string BlockColoredStart = "<span class=\"wikEdDiffBlock wikEdDiffBlock wikEdDiffBlock{number}\"" +
+                "title=\"{title}\" id=\"wikEdDiffBlock{number}\"" +
+                "onmouseover=\"wikEdDiffBlockHandler(undefined, this, 'mouseover');\">";
+            public static string BlockEnd = "</span>";
+
+            public static string MarkLeft = "<span class=\"wikEdDiffMarkLeft{nounicode}\"" +
+                "title=\"{title}\" id=\"wikEdDiffMark{number}\"" +
+                "onmouseover=\"wikEdDiffBlockHandler(undefined, this, 'mouseover');\"></span>";
+            public static string MarkLeftColored = "<span class=\"wikEdDiffMarkLeft{nounicode} wikEdDiffMark wikEdDiffMark{number}\"" +
+                "title=\"{title}\" id=\"wikEdDiffMark{number}\"" +
+                "onmouseover=\"wikEdDiffBlockHandler(undefined, this, 'mouseover');\"></span>";
+
+            public static string MarkRight = "<span class=\"wikEdDiffMarkRight{nounicode}\"" +
+                "title=\"{title}\" id=\"wikEdDiffMark{number}\"" +
+                "onmouseover=\"wikEdDiffBlockHandler(undefined, this, 'mouseover');\"></span>";
+            public static string MarkRightColored = "<span class=\"wikEdDiffMarkRight{nounicode} wikEdDiffMark wikEdDiffMark{number}\"" +
+                "title=\"{title}\" id=\"wikEdDiffMark{number}\"" +
+                "onmouseover=\"wikEdDiffBlockHandler(undefined, this, 'mouseover');\"></span>";
+
+            public static string Newline = "<span class=\"wikEdDiffNewline\">\n</span>";
+            public static string Tab = "<span class=\"wikEdDiffTab\"><span class=\"wikEdDiffTabSymbol\"></span>\t</span>";
+            public static string Space = "<span class=\"wikEdDiffSpace\"><span class=\"wikEdDiffSpaceSymbol\"></span> </span>";
+
+            public static string OmittedChars = "<span class=\"wikEdDiffOmittedChars\">…</span>";
+
+            public static string ErrorStart = "<div class=\"wikEdDiffError\" title=\"Error: diff not consistent with versions!\">";
+            public static string ErrorEnd = "</div>";
         }
     }
 
