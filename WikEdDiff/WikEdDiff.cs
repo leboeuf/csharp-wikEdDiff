@@ -1427,44 +1427,46 @@ namespace WikEdDiff
         /// </summary>
         private void GetGroups()
         {
+            var blocks = new List<Block>(Blocks);
+
             // Clear groups
             Groups.Clear();
 
             // Cycle through blocks
-            var blocksLength = Blocks.Count;
+            var blocksLength = blocks.Count;
             for (var block = 0; block < blocksLength; block++)
             {
                 var groupStart = block;
                 var groupEnd = block;
-                var oldBlock = Blocks[groupStart].OldBlock;
+                var oldBlock = blocks[groupStart].OldBlock;
 
                 // Get word and char count of block
-                int? words = WordCount(Blocks[block].Text);
+                int? words = WordCount(blocks[block].Text);
                 int? maxWords = words;
-                var unique = Blocks[block].Unique;
-                var chars = Blocks[block].Chars;
+                var unique = blocks[block].Unique;
+                var chars = blocks[block].Chars;
 
                 // Check right
                 for (var i = groupEnd + 1; i < blocksLength; i++)
                 {
                     // Check for crossing over to the left
-                    if (Blocks[i].OldBlock != oldBlock + 1)
+                    if (blocks[i].OldBlock != oldBlock + 1)
                     {
                         break;
                     }
-                    oldBlock = Blocks[i].OldBlock;
+                    oldBlock = blocks[i].OldBlock;
 
                     // Get word and char count of block
-                    if (Blocks[i].Words > maxWords)
+                    if (blocks[i].Words > maxWords)
                     {
-                        maxWords = Blocks[i].Words;
+                        maxWords = blocks[i].Words;
                     }
-                    if (Blocks[i].Unique == true)
+                    if (blocks[i].Unique == true)
                     {
                         unique = true;
                     }
-                    words += Blocks[i].Words;
-                    chars += Blocks[i].Chars;
+                    words += blocks[i].Words;
+                    chars += blocks[i].Chars;
                     groupEnd = i;
                 }
 
@@ -1473,7 +1475,7 @@ namespace WikEdDiff
                 {
                     // Set groups outside sections as fixed
                     var isFixed = false;
-                    if (Blocks[groupStart].Section == null)
+                    if (blocks[groupStart].Section == null)
                     {
                         isFixed = true;
                     }
@@ -1481,13 +1483,13 @@ namespace WikEdDiff
                     // Save group to block
                     for (var i = groupStart; i <= groupEnd; i++)
                     {
-                        Blocks[i].Group = Groups.Count;
-                        Blocks[i].Fixed = isFixed;
+                        blocks[i].Group = Groups.Count;
+                        blocks[i].Fixed = isFixed;
                     }
 
                     Groups.Add(new Model.Group
                     {
-                        OldNumber = Blocks[groupStart].OldNumber,
+                        OldNumber = blocks[groupStart].OldNumber,
                         BlockStart = groupStart,
                         BlockEnd = groupEnd,
                         Unique = unique,
@@ -1867,7 +1869,15 @@ namespace WikEdDiff
             }
 
             // Sort copy by oldNumber
-            blocksOld = blocksOld.OrderBy(b => b.NewNumber).ThenBy(b => b.OldNumber).ToList();
+            blocksOld.Sort((Block a, Block b) =>
+            {
+                var comp = a.OldNumber.GetValueOrDefault() - b.OldNumber.GetValueOrDefault();
+                if (comp == 0)
+                {
+                    comp = a.NewNumber.GetValueOrDefault() - b.NewNumber.GetValueOrDefault();
+                }
+                return comp;
+            });
 
             // Create lookup table: original to sorted
             var lookupSorted = new int[blocksOldLength];
@@ -1988,6 +1998,9 @@ namespace WikEdDiff
                 movedGroup.MovedFrom = markGroup;
                 color++;
             }
+
+            // Sort '|' blocks in and update groups
+            SortBlocks();
         }
 
         /// <summary>
@@ -3044,9 +3057,9 @@ namespace WikEdDiff
         private string HtmlEscape(string html)
         {
             html = new Regex("&").Replace(html, "&amp;");
-            html = new Regex("<").Replace("", "&lt;");
-            html = new Regex(">").Replace("", "&gt;");
-            html = new Regex("\"").Replace("", "&quot;");
+            html = new Regex("<").Replace(html, "&lt;");
+            html = new Regex(">").Replace(html, "&gt;");
+            html = new Regex("\"").Replace(html, "&quot;");
 		    return html;
         }
     }
